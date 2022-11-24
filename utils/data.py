@@ -48,8 +48,8 @@ def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_pa
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data_raw, device=torch.device('cuda')):
         self.data_raw = torch.tensor(data_raw)
-        self.frame_source = torch.cat((self.data_raw[:, 0, :, : 0].unsqueeze(-3), self.data_raw[:, 0, :, : 0].unsqueeze(-3), self.data_raw[:, 0, :, : 0].unsqueeze(-3)), dim=-3)
-        self.frame_driving = torch.cat((self.data_raw[:, 1, :, : 0].unsqueeze(-3), self.data_raw[:, 1, :, : 0].unsqueeze(-3), self.data_raw[:, 1, :, : 0].unsqueeze(-3)), dim=-3)
+        self.frame_source = torch.cat((self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3)), dim=-3)
+        self.frame_driving = torch.cat((self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3)), dim=-3)
         self.frame_source = self.frame_source.to(device)
         self.frame_driving = self.frame_driving.to(device)
 
