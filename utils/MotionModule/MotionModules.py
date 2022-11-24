@@ -46,9 +46,9 @@ class BottleNeck(torch.nn.Module):
         self.decoder = Decoder_kp(input_dim, layer_xp, num_layers, max_channel)
 
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
+        out = self.encoder(x)
+        out = self.decoder(out)
+        return out
 
 def heatmap2kp(heatmap, device):
     heatmap = heatmap.unsqueeze(-1) #(b, heatmap.shape[1], heatmap.shape[2], heatmap.shape[3], 1)

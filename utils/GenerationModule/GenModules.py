@@ -17,8 +17,7 @@ class Encoder_gen(torch.nn.Module):
         self.block_2 = torch.nn.ModuleList(layers_list)
 
     def forward(self, x):
-        out = x
-        out = self.block_1(out)
+        out = self.block_1(x)
         for layer in self.block_2:
             out = layer(out)
         return out

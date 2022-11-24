@@ -5,14 +5,14 @@ class DenseMotion(torch.nn.Module):
     def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, occlusion=False, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         super().__init__()
         self.num_kp = num_kp
-        self.occlusion = occlusion
+        self.occlusion_used = occlusion
         self.device = device
         self.bottle_neck = BottleNeck((num_kp + 1)*(num_channels + 1), layer_xp, num_layers, max_channel)
         self.mask = torch.nn.Sequential(
             torch.nn.Conv2d(layer_xp + (num_kp + 1)*(num_channels + 1), num_kp + 1, kernel_size=7, padding=3),
             torch.nn.Softmax(dim=1)
         )
-        if self.occlusion:
+        if self.occlusion_used:
             self.occlusion = torch.nn.Sequential(
                 torch.nn.Conv2d(layer_xp + (num_kp + 1)*(num_channels + 1), 1, kernel_size=7, padding=3),
                 torch.nn.Sigmoid()
@@ -28,7 +28,7 @@ class DenseMotion(torch.nn.Module):
         mask = self.mask(map) #(b, num_kp + 1, h, w)
         motion = (mask.unsqueeze(2)*S.permute(0, 1, 4, 2, 3)).sum(dim=1).permute(0, 2, 3, 1) #(b, h, w, 2)
         out['motion'] = motion #(b, h, w, 2)
-        if self.occlusion:
+        if self.occlusion_used:
             occlusion = self.occlusion(map) #(b, 1, h, w)
             out['occlusion'] = occlusion #(b, 1, h, w)
         return out

@@ -2,26 +2,26 @@ num_channels: 3
 num_kp: 15
 MotionModule:
   KeypointDetector:
-    layer_xp: 32
+    layer_xp: 16
     num_layers: 5
-    max_channel: 1024
+    max_channel: 256
     temperature: 0.1
     jacobian: True
   DenseMotion:
-    layer_xp: 64
+    layer_xp: 16
     num_layers: 5
-    max_channel: 1024
+    max_channel: 256
     occlusion: True
 GenerationModule:
-  layer_xp: 64
-  num_layers: 2
+  layer_xp: 16
+  num_layers: 3
   num_reslayers: 6
-  max_channel: 1024
+  max_channel: 256
 loss:
-  scales: (1., 0.75, 0.5, 0.25)
+  scales: (1., 0.75)
+  requires_grad_vgg: False
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
-  requires_grad_vgg: False
 train:
   num_epochs: 10
   lr: 1e-4
@@ -30,7 +30,7 @@ train:
 data_sampler:
   num_sample: 100
   resolution: '360p'
-  size_out: (256, 256)
+  size_out: (64, 64)
 data_loader:
   batch_size: 32
   shuffle: True
