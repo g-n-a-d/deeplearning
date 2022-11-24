@@ -80,15 +80,16 @@ class Transform:
         return jacobian
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, scales=(1.), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, requires_grad_vgg=False, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    def __init__(self, scales=(1.), requires_grad_vgg=False, equivariance_constraint_value=False, equivariance_constraint_jacobian=False, kp_detector=None, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         super().__init__()
         self.scales = scales
+        self.vgg = Vgg19(requires_grad=requires_grad_vgg).to(device)
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
-        self.vgg = Vgg19(requires_grad=requires_grad_vgg).to(device)
+        self.kp_detector = kp_detector
         self.device = device
 
-    def forward(self, frame_pred, frame_driving, kp_extractor, kp_driving):
+    def forward(self, frame_pred, frame_driving, kp_driving):
         loss_total = 0
         for scale in self.scales:
             frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
@@ -100,7 +101,7 @@ class L1Loss(torch.nn.Module):
         if self.ecv or self.ecj:
             transform = Transform(frame_driving.shape[0], 0.05, 0.05, 5, self.device)
             frame_transformed = transform.transform_frame(frame_driving) #(b, c, h, w)
-            kp_transformed = kp_extractor(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
+            kp_transformed = self.kp_detector(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
             if self.ecv:
                 loss_ecv = torch.abs(kp_driving['kp'] - transform.warp_kp(kp_transformed['kp'])).mean()
                 loss_total += 10*loss_ecv
