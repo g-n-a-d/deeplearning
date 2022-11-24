@@ -1,9 +1,9 @@
 import torch
 
-def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], display=False, log=False):
+def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], gamma=0.1, display=False, log=False):
     criterion = loss_function
     optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones_lr, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones_lr, gamma=gamma)
     if log:
         log_loss = []
     for epoch in range(num_epochs):
@@ -19,9 +19,8 @@ def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_
         if log:
             log_loss.append(loss)
     if log:
-        f = open('log/log_loss_{}.txt'.format(type(model).__name__), 'w')
-        for i in log_loss:
-            f.write(i + ' ')
-        f.write('\n')
-        f.close()
+        with open('log/log_loss_{}.txt'.format(type(model).__name__), 'w') as f:
+            for i in log_loss:
+                f.write(i + ' ')
+            f.write('\n')
         

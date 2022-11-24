@@ -7,7 +7,6 @@ from pytube import YouTube
 
 def partition_sampler(df, size):
     indexes = np.random.choice(df.shape[0], size, replace=True)
-    print(indexes)
     return df.iloc[indexes, :]
 
 def download_youtube_video(url, resolution='360p', save_path_video='./videos'):
@@ -47,7 +46,7 @@ def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_pa
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data_raw, device=torch.device('cuda')):
-        self.data_raw = torch.tensor(data_raw)
+        self.data_raw = torch.tensor(data_raw, dtype=torch.float)
         self.frame_source = torch.cat((self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3)), dim=-3)
         self.frame_driving = torch.cat((self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3)), dim=-3)
         self.frame_source = self.frame_source.to(device)

@@ -22,11 +22,14 @@ class Decoder_kp(torch.nn.Module):
     def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         layers_list = []
-        layers_dim = 2*[min(max_channel, (2**num_layers)*layer_xp)]
+        # layers_dim = 2*[min(max_channel, (2**num_layers)*layer_xp)]
+        # for i in range(1, num_layers + 1):
+        #     layers_dim.append(min(max_channel, (2**(num_layers - i))*layer_xp))
+        layers_dim = [min(max_channel, (2**num_layers)*layer_xp)//2]
         for i in range(1, num_layers + 1):
             layers_dim.append(min(max_channel, (2**(num_layers - i))*layer_xp))
-        for i in range(len(layers_dim) - 2):
-            layers_list.append(UpBlock(layers_dim[i], layers_dim[i + 2]))
+        for i in range(len(layers_dim) - 1):
+            layers_list.append(UpBlock(2*layers_dim[i], layers_dim[i + 1]))
         self.block = torch.nn.ModuleList(layers_list)
 
     def forward(self, x):

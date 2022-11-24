@@ -3,7 +3,7 @@ num_kp: 15
 MotionModule:
   KeypointDetector:
     layer_xp: 32
-    num_layers: 6
+    num_layers: 5
     max_channel: 1024
     temperature: 0.1
     jacobian: True
@@ -14,7 +14,7 @@ MotionModule:
     occlusion: True
 GenerationModule:
   layer_xp: 64
-  num_layers: 4
+  num_layers: 3
   num_reslayers: 6
   max_channel: 1024
 loss:
@@ -26,6 +26,7 @@ train:
   num_epochs: 10
   lr: 1e-4
   milestones_lr: [7, 9]
+  gamma: 0.1
 data_sampler:
   num_sample: 100
   resolution: '360p'
