@@ -9,8 +9,8 @@ class Encoder_gen(torch.nn.Module):
             torch.nn.BatchNorm2d(min(max_channel, layer_xp))
         )
         layers_list = []
-        layers_dim = [input_dim]
-        for i in range(1, num_layers + 1):
+        layers_dim = []
+        for i in range(0, num_layers + 1):
             layers_dim.append(min(max_channel, (2**i)*layer_xp))
         for i in range(len(layers_dim) - 1):
             layers_list.append(DownBlock(layers_dim[i], layers_dim[i + 1]))
@@ -43,7 +43,7 @@ class Decoder_gen(torch.nn.Module):
         layers_dim = []
         for i in range(num_layers + 1):
             layers_dim.append(min(max_channel, (2**(num_layers - i))*layer_xp))
-        for i in range(len(layers_dim) - 2):
+        for i in range(len(layers_dim) - 1):
             layers_list.append(UpBlock(layers_dim[i], layers_dim[i + 1]))
         self.block_2 = torch.nn.ModuleList(layers_list)
         self.block_3 = torch.nn.Sequential (
@@ -53,7 +53,7 @@ class Decoder_gen(torch.nn.Module):
 
     def forward(self, x):
         out = x
-        for layer in self.block_2:
+        for layer in self.block_1:
             out = layer(out) + out
         for layer in self.block_2:
             out = layer(out)

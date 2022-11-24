@@ -55,7 +55,7 @@ class Transform:
         grid = meshgrid((h, w)).unsqueeze(0) #(1, h, w, 2)
         grid = grid.view(1, h*w, 2) #(1, h*w, 2)
         grid = self.warp_kp(grid).view(self.b, h, w, 2) #(b, h, w, 2)
-        return torch.nn.functional.grid_sample(frame, grid, padding_mode="reflection", mode='nearest') #(b, c, h, w)
+        return torch.nn.functional.grid_sample(frame, grid, padding_mode="reflection", mode='nearest', align_corners=True) #(b, c, h, w)
     def warp_kp(self, kp):
         theta = self.theta.unsqueeze(1) #(b, 1, 2, 3)
         transformed = torch.matmul(theta[:, :, :, :2], kp.unsqueeze(-1)) + theta[:, :, :, 2:] #(b, num_kp, 2, 1)
@@ -76,43 +76,33 @@ class Transform:
         return jacobian
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, equivariance_constraint_value=False, equivariance_constraint_jacobian=False):
+    def __init__(self, scales=(1.), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, requires_grad_vgg=False, device=torch.device('cuda')):
         super().__init__()
+        self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
-        self.vgg = Vgg19()
+        self.vgg = Vgg19(requires_grad=False).to(device)
 
     def forward(self, frame_pred, frame_target, frame_driving, kp_extractor, kp_driving):
-# if sum(self.loss_weights['perceptual']) != 0:
         loss_total = 0
-        x_vgg = self.vgg(frame_pred)
-        y_vgg = self.vgg(frame_target)
-        for i in range(5):
-            loss_total += torch.abs(x_vgg[i] - y_vgg[i].detach()).mean()
+        for scale in self.scales:
+            frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear')
+            frame_target = torch.nn.functional.interpolate(frame_target, scale_factor=scale, mode='bilinear')
+            x_vgg = self.vgg(frame_pred)
+            y_vgg = self.vgg(frame_target)
+            for i in range(5):
+                loss_total += 10*torch.abs(x_vgg[i] - y_vgg[i].detach()).mean()
         if self.ecv or self.ecj:
-            transform = Transform(frame_driving.shape[0], **self.train_params['transform_params'])
+            transform = Transform(frame_driving.shape[0], 0.05, 0.05, 5)
             frame_transformed = transform.transform_frame(frame_driving) #(b, c, h, w)
             kp_transformed = kp_extractor(frame_transformed) #kp(b, num_kp, 2), jacobian()
-
-            # generated['transformed_frame'] = transformed_frame
-            # generated['transformed_kp'] = transformed_kp
-
-            ## Value loss part
             if self.ecv:
-                value = torch.abs(kp_driving['kp'] - transform.warp_coordinates(kp_transformed['kp'])).mean()
-                loss_total += value
-
-            ## jacobian loss part
+                loss_ecv = torch.abs(kp_driving['kp'] - transform.warp_kp(kp_transformed['kp'])).mean()
+                loss_total += 10*loss_ecv
             if self.ecj:
-                jacobian_transformed = torch.matmul(transform.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])
-
-                normed_driving = torch.inverse(kp_driving['jacobian'])
-                normed_transformed = jacobian_transformed
-                value = torch.matmul(normed_driving, normed_transformed)
-
+                RtoY = torch.matmul(transform.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])
+                RtoXinv = torch.inverse(kp_driving['jacobian'])
+                loss_ecj = torch.matmul(RtoXinv, RtoY)
                 I = torch.eye(2).unsqueeze(0).unsqueeze(0)
-
-                # value = torch.abs(eye - value).mean()
-                # loss_values['equivariance_jacobian'] = self.loss_weights['equivariance_jacobian'] * value
-                loss_total += torch.abs(value - I).mean()
+                loss_total += 10*torch.abs(loss_ecj - I).mean()
         return loss_total

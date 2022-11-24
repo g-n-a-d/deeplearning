@@ -1,0 +1,31 @@
+MotionModule:
+  num_channels: 3
+  num_kp: 15
+  KeypointDetector:
+    layer_xp: 32
+    num_layers: 6
+    max_channel: 1024
+    temperature: 0.1
+    jacobian: True
+  DenseMotion:
+    layer_xp: 64
+    num_layers: 5
+    max_channel: 1024
+    occlusion: True
+GenerationModule:
+  layer_xp: 64
+  num_layers: 4
+  num_reslayers: 6
+  max_channel: 1024
+loss:
+  scales: (1., 0.75, 0.5, 0.25)
+  equivariance_constraint_value: True
+  equivariance_constraint_jacobian: True
+  requires_grad_vgg: False
+train:
+  num_epochs: 10
+  lr: 1e-4
+  milestones_lr: [7, 9]
+data:
+  batch_size: 32
+  shuffle: True
