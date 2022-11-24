@@ -1,6 +1,6 @@
+num_channels: 3
+num_kp: 15
 MotionModule:
-  num_channels: 3
-  num_kp: 15
   KeypointDetector:
     layer_xp: 32
     num_layers: 6
@@ -26,6 +26,10 @@ train:
   num_epochs: 10
   lr: 1e-4
   milestones_lr: [7, 9]
-data:
+data_sampler:
+  num_sample: 100
+  resolution: '360p'
+  size_out: (256, 256)
+data_loader:
   batch_size: 32
   shuffle: True

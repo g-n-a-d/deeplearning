@@ -2,7 +2,7 @@ import torch
 from utils.MotionModule.MotionModules import BottleNeck, heatmap_diff, sparse_motions, deform_source
 
 class DenseMotion(torch.nn.Module):
-    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel, occlusion=False, scale_factor=1):
+    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, occlusion=False):
         super().__init__()
         self.num_kp = num_kp
         self.occlusion = occlusion
@@ -16,11 +16,8 @@ class DenseMotion(torch.nn.Module):
                 torch.nn.Conv2d(layer_xp + (num_kp + 1)*(num_channels + 1), 1, kernel_size=7, padding=3),
                 torch.nn.Sigmoid()
             )
-        # self.scale_factor = scale_factor
 
     def forward(self, frame_source, kp_source, kp_driving):
-        # if self.scale_factor != 1:
-        #     frame_source = self.down(frame_source)
         out = {}
         b, c, h, w = frame_source.shape
         H = heatmap_diff(kp_source, kp_driving, (h, w)) #(b, num_kp + 1, 1, h, w)

@@ -2,7 +2,7 @@ import torch
 from utils.MotionModule.MotionModules import BottleNeck, heatmap2kp
 
 class KeypointDetector(torch.nn.Module):
-    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, temperature=0.1, jacobian=False, scale_factor=1):
+    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, temperature=0.1, jacobian=False):
         super().__init__()
         self.num_kp = num_kp
         self.jacobian = jacobian
@@ -12,13 +12,8 @@ class KeypointDetector(torch.nn.Module):
         if self.jacobian:
             self.jacobian = torch.nn.Conv2d(num_channels + layer_xp, 4*num_kp, kernel_size=7, padding=3)
         self.temperature = temperature
-        # self.scale_factor = scale_factor
-        # if self.scale_factor != 1:
-        #     self.down = AntiAliasInterpolation2d(num_channels, self.scale_factor)
 
     def forward(self, x):
-        # if self.scale_factor != 1:
-        #     x = self.down(x)
         out = {}
         x = self.bottle_neck(x) #(b, num_channels + layer_xp, h, w)
         heatmap = self.heatmap(x) #(b, num_kp, h, w)

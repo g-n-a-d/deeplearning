@@ -33,7 +33,7 @@ def extract_customized_frame(video_path, interval, bounding_box, size_init=(720,
         frame_out.append(cv2.resize(frame[top:bot, left:right], dsize=size_out, interpolation=cv2.INTER_CUBIC))
     return frame_out
 
-def load_data(df, num_sample=10, resolution='360p', save_path_video='./videos', size_out=(256, 256)):
+def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_path_video='./videos'):
     os.mkdir(save_path_video)
     data_raw = []
     for i in range(df.shape[0]):

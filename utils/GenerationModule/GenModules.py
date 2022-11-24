@@ -2,7 +2,7 @@ import torch
 from utils.Modules import UpBlock, DownBlock
 
 class Encoder_gen(torch.nn.Module):
-    def __init__(self, input_dim, layer_xp, num_layers=3, max_channel=256):
+    def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         self.block_1 = torch.nn.Sequential(
             torch.nn.Conv2d(input_dim, min(max_channel, layer_xp), kernel_size=7, padding=3),
@@ -24,7 +24,7 @@ class Encoder_gen(torch.nn.Module):
         return out
 
 class Decoder_gen(torch.nn.Module):
-    def __init__(self, input_dim, layer_xp, num_layers=3, num_reslayers=6, max_channel=256):
+    def __init__(self, input_dim, layer_xp, num_layers, num_reslayers, max_channel=256):
         super().__init__()
         layers_list = []
         self.bottleneck = torch.nn.Sequential()

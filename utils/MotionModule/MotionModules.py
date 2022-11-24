@@ -2,7 +2,7 @@ import torch
 from utils.Modules import UpBlock, DownBlock, meshgrid
 
 class Encoder_kp(torch.nn.Module):
-    def __init__(self, input_dim, layer_xp, num_layers=3, max_channel=256):
+    def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         layers_list = []
         layers_dim = [input_dim]
@@ -19,7 +19,7 @@ class Encoder_kp(torch.nn.Module):
         return outs
 
 class Decoder_kp(torch.nn.Module):
-    def __init__(self, input_dim, layer_xp, num_layers=3, max_channel=256):
+    def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         layers_list = []
         layers_dim = 2*[min(max_channel, (2**num_layers)*layer_xp)]
@@ -37,7 +37,7 @@ class Decoder_kp(torch.nn.Module):
         return out
 
 class BottleNeck(torch.nn.Module):
-    def __init__(self, input_dim, layer_xp, num_layers=3, max_channel=256):
+    def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         self.encoder = Encoder_kp(input_dim, layer_xp, num_layers, max_channel)
         self.decoder = Decoder_kp(input_dim, layer_xp, num_layers, max_channel)

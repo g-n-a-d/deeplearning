@@ -2,7 +2,7 @@ import torch
 from utils.GenerationModule.GenModules import Encoder_gen, Decoder_gen
 
 class GAN_Generator(torch.nn.Module):
-    def __init__(self, num_channels, layer_xp, num_layers=3, num_reslayers=6, max_channel=256):
+    def __init__(self, num_channels, layer_xp, num_layers, num_reslayers, max_channel=256):
         super().__init__()
         self.encoder = Encoder_gen(num_channels, layer_xp, num_layers, max_channel)
         self.decoder = Decoder_gen(num_channels, layer_xp, num_layers, num_reslayers, max_channel)
