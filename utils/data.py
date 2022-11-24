@@ -33,6 +33,8 @@ def extract_customized_frame(video_path, interval, bounding_box, size_init=(720,
     return frame_out
 
 def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_path_video='./videos'):
+    if os.path.exists(save_path_video):
+        rmtree(save_path_video)
     os.mkdir(save_path_video)
     data_raw = []
     for i in range(df.shape[0]):

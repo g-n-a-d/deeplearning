@@ -30,7 +30,7 @@ train:
 data_sampler:
   num_sample: 100
   resolution: '360p'
-  size_out: (64, 64)
+  size_out: [64, 64]
 data_loader:
   batch_size: 32
   shuffle: True
