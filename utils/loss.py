@@ -108,6 +108,6 @@ class L1Loss(torch.nn.Module):
                 RtoY = torch.matmul(transform.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])
                 RtoXinv = torch.inverse(kp_driving['jacobian'])
                 loss_ecj = torch.matmul(RtoXinv, RtoY)
-                I = torch.eye(2).unsqueeze(0).unsqueeze(0)
+                I = torch.eye(2).to(self.device).unsqueeze(0).unsqueeze(0)
                 loss_total += 10*torch.abs(loss_ecj - I).mean()
         return loss_total

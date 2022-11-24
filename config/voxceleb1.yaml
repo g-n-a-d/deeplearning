@@ -18,7 +18,7 @@ GenerationModule:
   num_reslayers: 6
   max_channel: 256
 loss:
-  scales: (1., 0.75)
+  scales: !!python/tuple (1., 0.75)
   requires_grad_vgg: False
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
