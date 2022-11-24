@@ -45,7 +45,7 @@ def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_pa
     return np.array(data_raw)
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, data_raw, device=torch.device('cuda')):
+    def __init__(self, data_raw, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         self.data_raw = torch.tensor(data_raw, dtype=torch.float)
         self.frame_source = torch.cat((self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3)), dim=-3)
         self.frame_driving = torch.cat((self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3)), dim=-3)

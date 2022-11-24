@@ -29,8 +29,8 @@ class DownBlock(torch.nn.Module):
         out = self.layer(x)
         return out
 
-def meshgrid(size):
+def meshgrid(size, device):
     x = torch.linspace(-1, 1, steps=size[1]) #(size[1])
     y = torch.linspace(-1, 1, steps=size[0]) #(size[0])
     x_, y_ = torch.meshgrid(x, y, indexing='xy') #(size[1]), (size[0])
-    return torch.cat((x_.unsqueeze(-1), y_.unsqueeze(-1)), dim=2) #(size[0], size[1], 2)
+    return torch.cat((x_.unsqueeze(-1), y_.unsqueeze(-1)), dim=2).to(device) #(size[0], size[1], 2)

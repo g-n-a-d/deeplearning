@@ -62,11 +62,11 @@ def heatmap_prob(kp, size, std=0.1):
     prob = torch.exp(-0.5*(z_score**2).sum(-1)) #(b, kp.shape[1], size[0], size[1])
     return prob
 
-def heatmap_diff(kp_source, kp_driving, size):
+def heatmap_diff(kp_source, kp_driving, size, device):
     heatmap = heatmap_prob(kp_driving['kp'], size) - heatmap_prob(kp_source['kp'], size) #(b, kp_driving['kp'].shape[1], size[0], size[1])
-    zeros = torch.zeros(heatmap.shape[0], 1, size[0], size[1]) #(b, 1, size[0], size[1])
-    heatmap = torch.cat((zeros, heatmap), dim=1) #(b, kp_driving['kp'].shape[1] + 1, size[0], size[1])
-    return heatmap.unsqueeze(2)
+    zeros = torch.zeros(heatmap.shape[0], 1, size[0], size[1]).to(device) #(b, 1, size[0], size[1])
+    heatmap = torch.cat((zeros, heatmap), dim=1).unsqueeze(2) #(b, kp_driving['kp'].shape[1] + 1, 1, size[0], size[1])
+    return heatmap
 
 def sparse_motions(frame_source, kp_source, kp_driving):
     b, c, h, w = frame_source.shape

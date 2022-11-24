@@ -76,7 +76,7 @@ class Transform:
         return jacobian
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, scales=(1.), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, requires_grad_vgg=False, device=torch.device('cuda')):
+    def __init__(self, scales=(1.), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, requires_grad_vgg=False, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
