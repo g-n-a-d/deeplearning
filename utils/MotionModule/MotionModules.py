@@ -50,27 +50,27 @@ class BottleNeck(torch.nn.Module):
         x = self.decoder(x)
         return x
 
-def heatmap2kp(heatmap):
+def heatmap2kp(heatmap, device):
     heatmap = heatmap.unsqueeze(-1) #(b, heatmap.shape[1], heatmap.shape[2], heatmap.shape[3], 1)
-    grid = meshgrid(heatmap.shape[2:]).unsqueeze_(0).unsqueeze_(0) #(1, 1, heatmap.shape[2], heatmap.shape[3], 2)
+    grid = meshgrid(heatmap.shape[2:], device).unsqueeze_(0).unsqueeze_(0) #(1, 1, heatmap.shape[2], heatmap.shape[3], 2)
     coordinate = (heatmap*grid).sum(dim=(2, 3)) #(b, heatmap.shape[1], 2)
     return coordinate
 
-def heatmap_prob(kp, size, std=0.1):
-    coordinate = meshgrid(size).unsqueeze(0).unsqueeze(0).repeat(kp.shape[0], kp.shape[1], 1, 1, 1) #(b, kp.shape[1], size[0], size[1], 2)
+def heatmap_prob(kp, size, std, device):
+    coordinate = meshgrid(size, device).unsqueeze(0).unsqueeze(0).repeat(kp.shape[0], kp.shape[1], 1, 1, 1) #(b, kp.shape[1], size[0], size[1], 2)
     z_score = (coordinate - kp.view(kp.shape[0], kp.shape[1], 1, 1, 2))/std #(b, kp.shape[1], size[0], size[1], 2)
     prob = torch.exp(-0.5*(z_score**2).sum(-1)) #(b, kp.shape[1], size[0], size[1])
     return prob
 
 def heatmap_diff(kp_source, kp_driving, size, device):
-    heatmap = heatmap_prob(kp_driving['kp'], size) - heatmap_prob(kp_source['kp'], size) #(b, kp_driving['kp'].shape[1], size[0], size[1])
+    heatmap = heatmap_prob(kp_driving['kp'], size, 0.1, device) - heatmap_prob(kp_source['kp'], size, 0.1, device) #(b, kp_driving['kp'].shape[1], size[0], size[1])
     zeros = torch.zeros(heatmap.shape[0], 1, size[0], size[1]).to(device) #(b, 1, size[0], size[1])
     heatmap = torch.cat((zeros, heatmap), dim=1).unsqueeze(2) #(b, kp_driving['kp'].shape[1] + 1, 1, size[0], size[1])
     return heatmap
 
-def sparse_motions(frame_source, kp_source, kp_driving):
+def sparse_motions(frame_source, kp_source, kp_driving, device):
     b, c, h, w = frame_source.shape
-    coordinate = meshgrid((h, w)).unsqueeze(0).unsqueeze(0).repeat(b, 1, 1, 1, 1) #(b, 1, h, w, 2)
+    coordinate = meshgrid((h, w), device).unsqueeze(0).unsqueeze(0).repeat(b, 1, 1, 1, 1) #(b, 1, h, w, 2)
     flow = coordinate - kp_driving['kp'].unsqueeze(2).unsqueeze(2) #(b, kp_driving['kp'].shape[1], h, w, 2)
     if 'jacobian' in kp_source:
         jacobian = torch.matmul(kp_source['jacobian'], torch.inverse(kp_driving['jacobian'])) #(b, kp_source['jacobian'].shape[1], 2, 2)

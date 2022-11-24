@@ -43,19 +43,22 @@ class Vgg19(torch.nn.Module):
         return out
 
 class Transform:
-    def __init__(self, b, sigma_affine, sigma_tps=None, points_tps=None):
+    def __init__(self, b, sigma_affine, sigma_tps, points_tps, device):
         noise = torch.normal(mean=0, std=sigma_affine*torch.ones((b, 2, 3))) #(b, 2, 3)
-        self.theta = noise + torch.eye(2, 3).unsqueeze(0) #(b, 2, 3)
+        self.theta = (noise + torch.eye(2, 3).unsqueeze(0)).to(device) #(b, 2, 3)
         self.b = b
         self.tps = True
-        self.control_points = meshgrid((points_tps, points_tps)).unsqueeze(0) #(1, points_tps, points_tps, 2)
-        self.control_params = torch.normal(mean=0, std=sigma_tps*torch.ones((b, 1, points_tps**2))) #(b, 1, points_tps**2)
+        self.control_points = meshgrid((points_tps, points_tps), device).unsqueeze(0) #(1, points_tps, points_tps, 2)
+        self.control_params = torch.normal(mean=0, std=sigma_tps*torch.ones((b, 1, points_tps**2))).to(device) #(b, 1, points_tps**2)
+        self.device = device
+
     def transform_frame(self, frame):
         b, c, h, w = frame.shape
-        grid = meshgrid((h, w)).unsqueeze(0) #(1, h, w, 2)
+        grid = meshgrid((h, w), self.device).unsqueeze(0) #(1, h, w, 2)
         grid = grid.view(1, h*w, 2) #(1, h*w, 2)
         grid = self.warp_kp(grid).view(self.b, h, w, 2) #(b, h, w, 2)
         return torch.nn.functional.grid_sample(frame, grid, padding_mode="reflection", mode='nearest', align_corners=True) #(b, c, h, w)
+
     def warp_kp(self, kp):
         theta = self.theta.unsqueeze(1) #(b, 1, 2, 3)
         transformed = torch.matmul(theta[:, :, :, :2], kp.unsqueeze(-1)) + theta[:, :, :, 2:] #(b, num_kp, 2, 1)
@@ -68,6 +71,7 @@ class Transform:
         result = result.sum(dim=2).view(self.b, kp.shape[1], 1) #(b, num_kp, 1)
         transformed += result #(b, num_kp, 2)
         return transformed
+
     def jacobian(self, kp):
         new_kp = self.warp_kp(kp) #(b, num_kp, 2)
         grad_x = torch.autograd.grad(new_kp[..., 0].sum(), kp, create_graph=True)
@@ -81,21 +85,22 @@ class L1Loss(torch.nn.Module):
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
-        self.vgg = Vgg19(requires_grad=False).to(device)
+        self.vgg = Vgg19(requires_grad=requires_grad_vgg).to(device)
+        self.device = device
 
     def forward(self, frame_pred, frame_target, frame_driving, kp_extractor, kp_driving):
         loss_total = 0
         for scale in self.scales:
-            frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear')
-            frame_target = torch.nn.functional.interpolate(frame_target, scale_factor=scale, mode='bilinear')
+            frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
+            frame_target = torch.nn.functional.interpolate(frame_target, scale_factor=scale, mode='bilinear', antialias=True)
             x_vgg = self.vgg(frame_pred)
             y_vgg = self.vgg(frame_target)
             for i in range(5):
                 loss_total += 10*torch.abs(x_vgg[i] - y_vgg[i].detach()).mean()
         if self.ecv or self.ecj:
-            transform = Transform(frame_driving.shape[0], 0.05, 0.05, 5)
+            transform = Transform(frame_driving.shape[0], 0.05, 0.05, 5, self.device)
             frame_transformed = transform.transform_frame(frame_driving) #(b, c, h, w)
-            kp_transformed = kp_extractor(frame_transformed) #kp(b, num_kp, 2), jacobian()
+            kp_transformed = kp_extractor(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
             if self.ecv:
                 loss_ecv = torch.abs(kp_driving['kp'] - transform.warp_kp(kp_transformed['kp'])).mean()
                 loss_total += 10*loss_ecv
