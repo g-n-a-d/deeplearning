@@ -38,21 +38,24 @@ def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_pa
     os.mkdir(save_path_video)
     data_raw = []
     for i in range(df.shape[0]):
-        path_video = download_youtube_video('https://www.youtube.com/watch?v=' + df['video_id'].values[i], resolution, save_path_video)
-        frame_sampled = extract_customized_frame(path_video, (df['start'].values[i], df['end'].values[i]), list(map(int, df['bbox'].values[i].split('-'))), (df['height'].values[i], df['width'].values[i]), size_out)
-        for ii in range(num_sample):
-            index_sampled = np.sort(np.random.choice(range(df['end'].values[i] - df['start'].values[i]), 2, replace=False))
-            data_raw.append(np.concatenate((np.expand_dims(frame_sampled[index_sampled[0]], axis=0), np.expand_dims(frame_sampled[index_sampled[1]], axis=0)), axis=0))
+        try:
+            path_video = download_youtube_video('https://www.youtube.com/watch?v=' + df['video_id'].values[i], resolution, save_path_video)
+            frame_sampled = extract_customized_frame(path_video, (df['start'].values[i], df['end'].values[i]), list(map(int, df['bbox'].values[i].split('-'))), (df['height'].values[i], df['width'].values[i]), size_out)
+            for ii in range(num_sample):
+                index_sampled = np.sort(np.random.choice(range(df['end'].values[i] - df['start'].values[i]), 2, replace=False))
+                data_raw.append(np.concatenate((np.expand_dims(frame_sampled[index_sampled[0]], axis=0), np.expand_dims(frame_sampled[index_sampled[1]], axis=0)), axis=0))
+        except:
+            print('+1 video error')
     rmtree(save_path_video)
-    return np.array(data_raw)
+    return torch.tensor(data_raw, dtype=torch.float)
 
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data_raw, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
-        self.data_raw = torch.tensor(data_raw, dtype=torch.float)
-        self.frame_source = torch.cat((self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3)), dim=-3)
-        self.frame_driving = torch.cat((self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3)), dim=-3)
-        self.frame_source = self.frame_source.to(device)
-        self.frame_driving = self.frame_driving.to(device)
+        self.data_raw = data_raw/255
+        # self.frame_source = torch.cat((self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3), self.data_raw[:, 0, :, :, 0].unsqueeze(-3)), dim=-3)
+        # self.frame_driving = torch.cat((self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3), self.data_raw[:, 1, :, :, 0].unsqueeze(-3)), dim=-3)
+        self.frame_source = self.frame_source.permute(0, 1, 4, 2, 3).to(device)
+        self.frame_driving = self.frame_driving.permute(0, 1, 4, 2, 3).to(device)
 
     def __len__(self):
         return len(self.data_raw)

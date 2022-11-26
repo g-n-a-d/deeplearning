@@ -47,7 +47,7 @@ class Decoder_gen(torch.nn.Module):
         self.block_2 = torch.nn.ModuleList(layers_list)
         self.block_3 = torch.nn.Sequential (
             torch.nn.Conv2d(min(max_channel, layer_xp), input_dim, kernel_size=7, padding=3),
-            # torch.nn.Sigmoid()
+            torch.nn.Sigmoid()
         )
 
     def forward(self, x):
