@@ -22,5 +22,5 @@ def train(model, data_loader, kp_detector, loss_function, num_epochs=10, lr=1e-4
     if log:
         with open('log/log_loss_{}.txt'.format(type(model).__name__), 'a') as f:
             for i in log_loss:
-                f.write(i + ' ')
+                f.write(str(i) + ' ')
             f.write('\n')
