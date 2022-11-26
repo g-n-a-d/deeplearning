@@ -52,8 +52,8 @@ def load_data(df, num_sample=10, resolution='360p', size_out=(256, 256), save_pa
 class Dataset(torch.utils.data.Dataset):
     def __init__(self, data_raw, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
         self.data_raw = data_raw/255
-        self.frame_source = self.data_raw[:, 0, :, :, :].permute(0, 1, 4, 2, 3)
-        self.frame_driving = self.data_raw[:, 1, :, :, :].permute(0, 1, 4, 2, 3)
+        self.frame_source = self.data_raw[:, 0, :, :, :].permute(0, 3, 1, 2)
+        self.frame_driving = self.data_raw[:, 1, :, :, :].permute(0, 3, 1, 2)
         self.frame_source = self.frame_source.to(device)
         self.frame_driving = self.frame_driving.to(device)
 
