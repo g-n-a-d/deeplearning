@@ -14,7 +14,7 @@ MotionModule:
     occlusion: True
 GenerationModule:
   layer_xp: 16
-  num_layers: 3
+  num_layers: 2
   num_reslayers: 6
   max_channel: 256
 loss:
@@ -32,5 +32,5 @@ data_sampler:
   resolution: '360p'
   size_out: [64, 64]
 data_loader:
-  batch_size: 32
+  batch_size: 16
   shuffle: True
