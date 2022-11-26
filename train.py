@@ -18,7 +18,7 @@ def train(model, data_loader, kp_detector, loss_function, num_epochs=10, lr=1e-4
                 print('epoch {}/{}: [{}/{}] -------> loss: {}'.format(epoch + 1, num_epochs, i + 1, len(data_loader), loss.item()))
         scheduler.step()
         if log:
-            log_loss.append(loss)
+            log_loss.append(loss.item())
     if log:
         with open('log/log_loss_{}.txt'.format(type(model).__name__), 'a') as f:
             for i in log_loss:
