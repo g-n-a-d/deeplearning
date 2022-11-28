@@ -2,21 +2,21 @@ num_channels: 3
 num_kp: 15
 MotionModule:
   KeypointDetector:
-    layer_xp: 32
+    layer_xp: 16
     num_layers: 5
-    max_channel: 512
+    max_channel: 256
     temperature: 0.1
     jacobian: True
   DenseMotion:
-    layer_xp: 32
+    layer_xp: 16
     num_layers: 5
-    max_channel: 512
+    max_channel: 256
     occlusion: True
 GenerationModule:
-  layer_xp: 64
+  layer_xp: 32
   num_layers: 2
   num_reslayers: 6
-  max_channel: 512
+  max_channel: 256
 loss:
   scales: [1., 0.75, 0.5, 0.25]
   requires_grad_vgg: False
