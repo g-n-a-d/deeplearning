@@ -10,7 +10,7 @@ class GAN_Generator(torch.nn.Module):
 
     def forward(self, frame_source, motion):
         if self.scale:
-            torch.nn.functional.interpolate(frame_source, scale_factor=self.scale)
+            frame_source = torch.nn.functional.interpolate(frame_source, scale_factor=self.scale)
         out = self.encoder(frame_source) #(b, min(max_channel, layer_xp), h/2**num_layers, w/2**num_layers)
         motion_flow = motion['motion'] #(b, h, w, 2)
         motion_flow = torch.nn.functional.interpolate(motion_flow.permute(0, 3, 1, 2), size=out.shape[2:], mode='bilinear').permute(0, 2, 3, 1) #(b, h/2**num_layers, w/2**num_layers, 2)
