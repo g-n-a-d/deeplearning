@@ -2,15 +2,13 @@ import torch
 from utils.GenerationModule.GenModules import Encoder_gen, Decoder_gen
 
 class GAN_Generator(torch.nn.Module):
-    def __init__(self, num_channels, layer_xp, num_layers, num_reslayers, max_channel=256, scale=None):
+    def __init__(self, num_channels, layer_xp, num_layers, num_reslayers, max_channel=256):
         super().__init__()
         self.encoder = Encoder_gen(num_channels, layer_xp, num_layers, max_channel)
         self.decoder = Decoder_gen(num_channels, layer_xp, num_layers, num_reslayers, max_channel)
-        self.scale = scale
 
     def forward(self, frame_source, motion):
-        if self.scale:
-            frame_source = torch.nn.functional.interpolate(frame_source, scale_factor=self.scale)
+        frame_source = torch.nn.functional.interpolate(frame_source, scale_factor=4.0)
         out = self.encoder(frame_source) #(b, min(max_channel, layer_xp), h/2**num_layers, w/2**num_layers)
         motion_flow = motion['motion'] #(b, h, w, 2)
         motion_flow = torch.nn.functional.interpolate(motion_flow.permute(0, 3, 1, 2), size=out.shape[2:], mode='bilinear').permute(0, 2, 3, 1) #(b, h/2**num_layers, w/2**num_layers, 2)
