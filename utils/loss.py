@@ -91,9 +91,9 @@ class L1Loss(torch.nn.Module):
     def forward(self, frame_pred, frame_driving, kp_detector, kp_driving):
         loss_total = 0
         for scale in self.scales:
-            frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
+            frame_pred_ = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
-            x_vgg = self.vgg(frame_pred)
+            x_vgg = self.vgg(frame_pred_)
             y_vgg = self.vgg(frame_target)
             for i in range(5):
                 loss_total += torch.abs(x_vgg[i] - y_vgg[i].detach()).mean()
