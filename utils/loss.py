@@ -103,11 +103,11 @@ class L1Loss(torch.nn.Module):
             kp_transformed = kp_detector(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
             if self.ecv:
                 loss_ecv = torch.abs(kp_driving['kp'] - transform.warp_kp(kp_transformed['kp'])).mean()
-                loss_total += 0.5*loss_ecv
+                loss_total += loss_ecv
             if self.ecj:
                 RtoY = torch.matmul(transform.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])
                 RtoXinv = torch.inverse(kp_driving['jacobian'])
                 loss_ecj = torch.matmul(RtoXinv, RtoY)
                 I = torch.eye(2).to(self.device).unsqueeze(0).unsqueeze(0)
-                loss_total += 0.5*torch.abs(loss_ecj - I).mean()
+                loss_total += torch.abs(loss_ecj - I).mean()
         return loss_total
