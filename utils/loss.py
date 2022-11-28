@@ -92,6 +92,7 @@ class L1Loss(torch.nn.Module):
         loss_total = 0
         for scale in self.scales:
             frame_pred = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
+            frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=4.0)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             x_vgg = self.vgg(frame_pred)
             y_vgg = self.vgg(frame_target)
