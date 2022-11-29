@@ -15,7 +15,7 @@ MotionModule:
 GenerationModule:
   layer_xp: 64
   num_layers: 1
-  num_reslayers: 8
+  num_reslayers: 7
   max_channel: 256
 loss:
   scales: [1, 0.75, 0.5]
