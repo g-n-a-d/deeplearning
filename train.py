@@ -1,6 +1,6 @@
 import torch
 
-def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], gamma=0.1, display=False, log=False):
+def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], gamma=0.1, display=False, log=False, device=torch.device('cpu')):
     criterion = loss_function
     optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones_lr, gamma=gamma)
@@ -10,6 +10,8 @@ def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_
     for epoch in range(num_epochs):
         log_loss = []
         for i, (s, d) in enumerate(data_loader):
+            s = s.to(device)
+            d = d.to(device)
             pred = model(s, d)
             loss = criterion(pred['frame_generated'], d)
             optimizer.zero_grad()
