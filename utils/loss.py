@@ -75,13 +75,13 @@ class Transform(torch.nn.Module):
         return loss
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, tf=None, weight_loss=[1., 1., 1.]):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], tf=None):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
-        self.tf = tf
         self.weight_loss = weight_loss
+        self.tf = tf
         self.vgg = Vgg19_pretrained()
 
     def forward(self, frame_pred, frame_driving):
@@ -102,13 +102,13 @@ class L1Loss(torch.nn.Module):
         return loss_total
 
 class VAE_Loss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, tf=None, weight_loss=[1., 1., 1.]):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], tf=None):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
-        self.tf = tf
         self.weight_loss = weight_loss
+        self.tf = tf
         self.vgg = Vgg19_pretrained()
 
     def kld(self, mean, logvar):
