@@ -2,11 +2,10 @@ import torch
 from utils.MotionModule.MotionModules import BottleNeck, heatmap2kp
 
 class KeypointDetector(torch.nn.Module):
-    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, temperature=0.1, jacobian=False, device=torch.device('cuda' if torch.cuda.is_available() else 'cpu')):
+    def __init__(self, num_channels, num_kp, layer_xp, num_layers, max_channel=256, temperature=0.1, jacobian=False):
         super().__init__()
         self.num_kp = num_kp
         self.jacobian_used = jacobian
-        self.device = device
         self.bottle_neck = BottleNeck(num_channels, layer_xp, num_layers, max_channel)
         self.heatmap = torch.nn.Conv2d(num_channels + layer_xp, num_kp, kernel_size=7, padding=3)
         self.softmax = torch.nn.Softmax(dim=2)
@@ -19,7 +18,7 @@ class KeypointDetector(torch.nn.Module):
         x = self.bottle_neck(x) #(b, num_channels + layer_xp, h, w)
         heatmap = self.heatmap(x) #(b, num_kp, h, w)
         heatmap = self.softmax(heatmap.view(heatmap.shape[0], heatmap.shape[1], -1)/self.temperature).view(*heatmap.shape) #(b, num_kp, h, w)
-        out['kp'] = heatmap2kp(heatmap, self.device) #(b, num_kp, 2)
+        out['kp'] = heatmap2kp(heatmap) #(b, num_kp, 2)
         if self.jacobian_used:
             jacobian = self.jacobian(x) #(b, 4*num_kp, h, w)
             jacobian = jacobian.view(heatmap.shape[0], self.num_kp, 4, heatmap.shape[2], heatmap.shape[3]) #(b, num_kp, 4, h, w)

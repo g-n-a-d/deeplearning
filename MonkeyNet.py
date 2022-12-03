@@ -1,6 +1,6 @@
 import torch
 
-class FirstOrderMotionModel(torch.nn.Module):
+class MonkeyNet(torch.nn.Module):
     def __init__(self, kpextractor, densemotion, generator):
         super().__init__()
         self.kpextractor = kpextractor

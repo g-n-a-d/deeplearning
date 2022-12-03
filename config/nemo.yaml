@@ -1,5 +1,5 @@
 num_channels: 3
-num_kp: 15
+num_kp: 10
 MotionModule:
   KeypointDetector:
     layer_xp: 64
@@ -17,9 +17,9 @@ GenerationModule:
   num_layers: 1
   num_reslayers: 7
   max_channel: 256
+  scalestep: 2
 loss:
   scales: [1, 0.75, 0.5]
-  requires_grad_vgg: False
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
 train:

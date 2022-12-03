@@ -17,9 +17,11 @@ GenerationModule:
   num_layers: 1
   num_reslayers: 8
   max_channel: 256
+transform:
+  scale_std: 0.5
+  shift_std: 0.3
 loss:
   scales: [1, 0.75, 0.5]
-  requires_grad_vgg: False
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
 train:
