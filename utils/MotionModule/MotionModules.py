@@ -85,5 +85,5 @@ def deform_source(frame_source, flow, num_kp):
     b, c, h, w = frame_source.shape
     frame_undeformed = frame_source.unsqueeze(1).repeat(1, num_kp + 1, 1, 1, 1) #(b, num_kp + 1, c, h, w)
     frame_undeformed = frame_undeformed.view(b*(num_kp + 1), c, h, w) #(b*(num_kp + 1), c, h, w)
-    frame_deformed = torch.nn.functional.grid_sample(frame_undeformed, flow.view((b*(num_kp + 1), h, w, 2)), align_corners=False).view((b, num_kp + 1, c, h, w)) #(b, num_kp + 1, c, h, w)
+    frame_deformed = torch.nn.functional.grid_sample(frame_undeformed, flow.view((b*(num_kp + 1), h, w, 2)), align_corners=True).view((b, num_kp + 1, c, h, w)) #(b, num_kp + 1, c, h, w)
     return frame_deformed
