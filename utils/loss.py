@@ -18,8 +18,8 @@ class Vgg19_pretrained(torch.nn.Module):
             self.block3.add_module(str(x), vgg_pretrained_features[x])
         for x in range(27, 36):
             self.block4.add_module(str(x), vgg_pretrained_features[x])
-        self.mean = torch.Tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)
-        self.std = torch.Tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1)
+        self.mean = torch.nn.Parameter(torch.Tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1), requires_grad=False)
+        self.std = torch.nn.Parameter(torch.Tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1), requires_grad=False)
     
     def forward(self, x):
         x = (x - self.mean)/self.std
@@ -34,12 +34,13 @@ class Transform(torch.nn.Module):
     def __init__(self, b, kp_detector, scale_std=0.5, shift_std=0.3):
         super().__init__()
         self.kp_detector = kp_detector
-        self.scale = scale_std*(torch.rand((b, 1)) - 0.5) + 1 #(b, 1)
-        theta = 6.28318530718*torch.rand((b, 1)) #(b, 1)
+        self.scale = torch.nn.Parameter(scale_std*(torch.rand((b, 1)) - 0.5) + 1, requires_grad=False) #(b, 1)
+        theta = torch.nn.Parameter(6.28318530718*torch.rand((b, 1)), requires_grad=False) #(b, 1)
         costheta = torch.cos(theta).unsqueeze(-1) #(b, 1, 1)
         sintheta = torch.sin(theta).unsqueeze(-1) #(b, 1, 1)
-        self.rotation = torch.cat((torch.cat((costheta, sintheta), dim=-1), torch.cat((-sintheta, costheta), dim=-1)), dim=-2) #(b, 2, 2)
-        self.shift = shift_std*torch.rand((b, 2)) #(b, 2)
+        rotationmatrix = torch.cat((torch.cat((costheta, sintheta), dim=-1), torch.cat((-sintheta, costheta), dim=-1)), dim=-2) #(b, 2, 2)
+        self.rotation = torch.nn.Parameter(rotationmatrix, requires_grad=False) #(b, 2, 2)
+        self.shift = torch.nn.Parameter(shift_std*torch.rand((b, 2)), requires_grad=False) #(b, 2)
 
     def warp_kp(self, kp):
         kp_tf = self.scale.unsqueeze(1)*kp #(b, num_kp, 2)
@@ -85,21 +86,25 @@ class L1Loss(torch.nn.Module):
         self.vgg = Vgg19_pretrained()
 
     def forward(self, pred, frame_driving):
-        loss_total = 0
+        loss = {}
+        loss['total'] = 0
         for scale in self.scales:
             frame_pred_ = torch.nn.functional.interpolate(pred['frame_generated'], scale_factor=scale, mode='bilinear', antialias=True)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
             for i in range(4):
-                loss_total += self.weight_loss[0]*torch.abs(pred_vgg[i] - target_vgg[i]).mean()
+                loss['total'] += self.weight_loss[0]*torch.abs(pred_vgg[i] - target_vgg[i]).mean()
         if self.ecv or self.ecj:
             loss_ec = self.tf(frame_driving)
+            loss['ec'] = 0
             if self.ecv:
-                loss_total += self.weight_loss[1]*loss_ec['ecv']
+                loss['ec'] += loss_ec['ecv']
+                loss['total'] += self.weight_loss[1]*loss_ec['ecv']
             if self.ecj:
-                loss_total += self.weight_loss[2]*loss_ec['ecj']
-        return loss_total
+                loss['ec'] += loss_ec['ecj']
+                loss['total'] += self.weight_loss[2]*loss_ec['ecj']
+        return loss
 
 class VAE_Loss(torch.nn.Module):
     def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], tf=None):
@@ -115,18 +120,22 @@ class VAE_Loss(torch.nn.Module):
         return 0.5*torch.mean(torch.exp(logvar) - logvar + mean**2 - 1)
 
     def forward(self, pred, frame_driving):
-        loss_total = 0
+        loss = {}
+        loss['total'] = 0
         for scale in self.scales:
             frame_pred_ = torch.nn.functional.interpolate(pred['frame_generated'], scale_factor=scale, mode='bilinear', antialias=True)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
             for i in range(5):
-                loss_total += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
+                loss['total'] += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
             loss_ec = self.tf(frame_driving)
+            loss['ec'] = 0
             if self.ecv:
-                loss_total += loss_ec['ecv']
+                loss['ec'] += loss_ec['ecv']
+                loss['total'] += self.weight_loss[1]*loss_ec['ecv']
             if self.ecj:
-                loss_total += loss_ec['ecj']
-        return loss_total
+                loss['ec'] += loss_ec['ecj']
+                loss['total'] += self.weight_loss[2]*loss_ec['ecj']
+        return loss
