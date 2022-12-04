@@ -28,9 +28,9 @@ def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_
                     len(data_loader),
                     loss['total'].item(),
                     loss['ec'].item() if 'ec' in loss.keys() else 'na'))
-            log_loss_['total'].append(loss['total'].items())
+            log_loss_['total'].append(loss['total'].item())
             if 'ec' in loss.keys():
-                log_loss_['ec'].append(loss['ec'].items())
+                log_loss_['ec'].append(loss['ec'].item())
         scheduler.step()
         log_loss['epoch_{}'.format(epoch + 1)] = log_loss_
         if log:
