@@ -67,7 +67,7 @@ class Transform(torch.nn.Module):
         frame_transformed = self.tf_frame(frame) #(b, c, h, w)
         kp_transformed = self.kp_detector(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
         ecv = self.warp_kp(kp_transformed['kp']) #(b, num_kp, 2)
-        loss['ecv'] = torch.abs(kp['kp'] - ecv).mean()
+        loss['ecv'] = torch.abs(kp['kp'] - ecv).mean() #(1)
         Xgrad_inv = torch.inverse(kp['jacobian']) #(b, num_kp, 2, 2)
         ecj = torch.matmul(Xgrad_inv, torch.matmul(self.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])) #(b, num_kp, 2, 2)
         I = torch.eye(2).to(frame.device) #(2, 2)
@@ -84,10 +84,10 @@ class L1Loss(torch.nn.Module):
         self.tf = tf
         self.vgg = Vgg19_pretrained()
 
-    def forward(self, frame_pred, frame_driving):
+    def forward(self, pred, frame_driving):
         loss_total = 0
         for scale in self.scales:
-            frame_pred_ = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
+            frame_pred_ = torch.nn.functional.interpolate(pred['frame_generated'], scale_factor=scale, mode='bilinear', antialias=True)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
@@ -114,15 +114,15 @@ class VAE_Loss(torch.nn.Module):
     def kld(self, mean, logvar):
         return 0.5*torch.mean(torch.exp(logvar) - logvar + mean**2 - 1)
 
-    def forward(self, frame_pred, frame_driving, mean, logvar):
+    def forward(self, pred, frame_driving):
         loss_total = 0
         for scale in self.scales:
-            frame_pred_ = torch.nn.functional.interpolate(frame_pred, scale_factor=scale, mode='bilinear', antialias=True)
+            frame_pred_ = torch.nn.functional.interpolate(pred['frame_generated'], scale_factor=scale, mode='bilinear', antialias=True)
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
             for i in range(5):
-                loss_total += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(mean, logvar)
+                loss_total += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
             loss_ec = self.tf(frame_driving)
             if self.ecv:
