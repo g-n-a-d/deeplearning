@@ -31,9 +31,9 @@ class Vgg19_pretrained(torch.nn.Module):
         return outs
 
 class Transform(torch.nn.Module):
-    def __init__(self, b, kp_detector, scale_std=0.5, shift_std=0.3):
+    def __init__(self, b, kpdetector, scale_std=0.5, shift_std=0.3):
         super().__init__()
-        self.kp_detector = kp_detector
+        self.kp_detector = kpdetector
         self.scale = torch.nn.Parameter(scale_std*(torch.rand((b, 1)) - 0.5) + 1, requires_grad=False) #(b, 1)
         theta = torch.nn.Parameter(6.28318530718*torch.rand((b, 1)), requires_grad=False) #(b, 1)
         costheta = torch.cos(theta).unsqueeze(-1) #(b, 1, 1)
@@ -76,13 +76,15 @@ class Transform(torch.nn.Module):
         return loss
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], tf=None):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_std=0.5, shift_std=0.3):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
         self.weight_loss = weight_loss
-        self.tf = tf
+        self.kpdetector = kpdetector
+        self.scale_std = scale_std
+        self.shift_std = shift_std
         self.vgg = Vgg19_pretrained()
 
     def forward(self, pred, frame_driving):
@@ -96,7 +98,8 @@ class L1Loss(torch.nn.Module):
             for i in range(4):
                 loss['total'] += self.weight_loss[0]*torch.abs(pred_vgg[i] - target_vgg[i]).mean()
         if self.ecv or self.ecj:
-            loss_ec = self.tf(frame_driving)
+            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std)
+            loss_ec = tf(frame_driving)
             loss['ec'] = 0
             if self.ecv:
                 loss['ec'] += loss_ec['ecv']
@@ -107,13 +110,15 @@ class L1Loss(torch.nn.Module):
         return loss
 
 class VAE_Loss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], tf=None):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_std=0.5, shift_std=0.3):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
         self.weight_loss = weight_loss
-        self.tf = tf
+        self.kpdetector = kpdetector
+        self.scale_std = scale_std
+        self.shift_std = shift_std
         self.vgg = Vgg19_pretrained()
 
     def kld(self, mean, logvar):
