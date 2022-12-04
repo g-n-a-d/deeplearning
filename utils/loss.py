@@ -98,7 +98,7 @@ class L1Loss(torch.nn.Module):
             for i in range(4):
                 loss['total'] += self.weight_loss[0]*torch.abs(pred_vgg[i] - target_vgg[i]).mean()
         if self.ecv or self.ecj:
-            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std)
+            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)
             loss_ec = tf(frame_driving)
             loss['ec'] = 0
             if self.ecv:
@@ -135,7 +135,8 @@ class VAE_Loss(torch.nn.Module):
             for i in range(5):
                 loss['total'] += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
-            loss_ec = self.tf(frame_driving)
+            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)
+            loss_ec = tf(frame_driving)
             loss['ec'] = 0
             if self.ecv:
                 loss['ec'] += loss_ec['ecv']
