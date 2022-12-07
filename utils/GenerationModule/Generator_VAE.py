@@ -21,10 +21,10 @@ class Generator_VAE(torch.nn.Module):
         latent = mean + torch.exp(0.5*logvar)*z_randn #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         motion_flow = motion['motion'] #(b, h, w, 2)
         motion_flow = self.upsampler(motion_flow.permute(0, 3, 1, 2)).permute(0, 2, 3, 1) #(b, h/scalestep**num_layers, w/scalestep**num_layers, 2)
-        latent = torch.nn.functional.grid_sample(latent, motion_flow, align_corners=False) #(b, min(max_channel, layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
+        latent = torch.nn.functional.grid_sample(latent, motion_flow, align_corners=True) #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         if 'occlusion' in motion.keys():
             occlusion = motion['occlusion'] #(b, 1, h, w)
             occlusion = self.upsampler(occlusion) #(b, 1, h/scalestep**num_layers, w/scalestep**num_layers)
-            latent = latent*occlusion #(b, min(max_channel, layer_xp), h/2**num_layers, w/2**num_layers)
+            latent = latent*occlusion #(b, min(max_channel, (2**num_layers)*layer_xp), h/2**num_layers, w/2**num_layers)
         out['frame_generated'] = self.decoder(latent) #(b, num_channels, h, w)
         return out

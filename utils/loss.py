@@ -109,7 +109,7 @@ class L1Loss(torch.nn.Module):
                 loss['total'] += self.weight_loss[2]*loss_ec['ecj']
         return loss
 
-class VAE_Loss(torch.nn.Module):
+class VAELoss(torch.nn.Module):
     def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_std=0.5, shift_std=0.3):
         super().__init__()
         self.scales = scales
@@ -120,6 +120,7 @@ class VAE_Loss(torch.nn.Module):
         self.scale_std = scale_std
         self.shift_std = shift_std
         self.vgg = Vgg19_pretrained()
+        self.mse = torch.nn.MSELoss()
 
     def kld(self, mean, logvar):
         return 0.5*torch.mean(torch.exp(logvar) - logvar + mean**2 - 1)
@@ -132,7 +133,7 @@ class VAE_Loss(torch.nn.Module):
             frame_target = torch.nn.functional.interpolate(frame_driving, scale_factor=scale, mode='bilinear', antialias=True)
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
-            for i in range(5):
+            for i in range(4):
                 loss['total'] += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
             tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)

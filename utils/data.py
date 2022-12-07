@@ -54,8 +54,6 @@ class Dataset(torch.utils.data.Dataset):
         self.data_raw = data_raw/255
         self.frame_source = self.data_raw[:, 0, :, :, :].permute(0, 3, 1, 2)
         self.frame_driving = self.data_raw[:, 1, :, :, :].permute(0, 3, 1, 2)
-        self.frame_source = self.frame_source.to(device)
-        self.frame_driving = self.frame_driving.to(device)
 
     def __len__(self):
         return len(self.data_raw)

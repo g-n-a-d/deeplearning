@@ -19,13 +19,13 @@ class DenseMotion_(torch.nn.Module):
     def forward(self, frame_source, kp_source, kp_driving):
         out = {}
         b, c, h, w = frame_source.shape
-        H_dot = heatmap_diff(kp_source, kp_driving, (h, w)) #(b, num_kp + 1, 1, h, w)
-        out['heatmap'] = H_dot
+        H_dot = heatmap_diff(kp_source, kp_driving, (h, w)) #(b, num_kp + 1, h, w)
+        out['heatmap'] = H_dot #(b, num_kp + 1, h, w)
         S = sparse_motions(frame_source, kp_source, kp_driving) #(b, num_kp + 1, h, w, 2)
         source_df = deform_source(frame_source, S, self.num_kp) #(b, num_kp + 1, c, h, w)
-        map = self.bottle_neck(torch.cat([H_dot, source_df], dim=2).view(b, (self.num_kp + 1)*(c + 1), h, w)) #(b, layer_xp + (num_kp + 1)*(c + 1), h, w)
+        map = self.bottle_neck(torch.cat([H_dot.unsqueeze(2), source_df], dim=2).view(b, (self.num_kp + 1)*(c + 1), h, w)) #(b, layer_xp + (num_kp + 1)*(c + 1), h, w)
         mask = self.mask(map) #(b, num_kp + 1, h, w)
         motion_coarse = (mask.unsqueeze(2)*S.permute(0, 1, 4, 2, 3)).sum(dim=1).permute(0, 2, 3, 1) #(b, h, w, 2)
-        motion_residual = self.residual(map)
-        out['motion'] = motion_coarse + motion_residual #(b, h, w, 2)
+        motion_residual = self.residual(map) #(b, 2, h, w)
+        out['motion'] = motion_coarse + motion_residual.permute(0, 2, 3, 1) #(b, h, w, 2)
         return out

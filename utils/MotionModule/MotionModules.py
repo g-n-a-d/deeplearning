@@ -22,9 +22,6 @@ class Decoder_kp(torch.nn.Module):
     def __init__(self, input_dim, layer_xp, num_layers, max_channel=256):
         super().__init__()
         layers_list = []
-        # layers_dim = 2*[min(max_channel, (2**num_layers)*layer_xp)]
-        # for i in range(1, num_layers + 1):
-        #     layers_dim.append(min(max_channel, (2**(num_layers - i))*layer_xp))
         layers_dim = [min(max_channel, (2**num_layers)*layer_xp)//2]
         for i in range(1, num_layers + 1):
             layers_dim.append(min(max_channel, (2**(num_layers - i))*layer_xp))
@@ -65,7 +62,7 @@ def heatmap_prob(kp, size, std):
 def heatmap_diff(kp_source, kp_driving, size):
     heatmap = heatmap_prob(kp_driving['kp'], size, 0.1) - heatmap_prob(kp_source['kp'], size, 0.1) #(b, num_kp, size[0], size[1])
     background = torch.zeros(heatmap.shape[0], 1, size[0], size[1]).to(kp_source['kp'].device) #(b, 1, size[0], size[1])
-    heatmap = torch.cat((background, heatmap), dim=1).unsqueeze(2) #(b, num_kp + 1, 1, size[0], size[1])
+    heatmap = torch.cat((background, heatmap), dim=1) #(b, num_kp + 1, size[0], size[1])
     return heatmap
 
 def sparse_motions(frame_source, kp_source, kp_driving):
