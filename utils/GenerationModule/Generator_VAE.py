@@ -17,7 +17,7 @@ class Generator_VAE(torch.nn.Module):
         out['mean'] = mean #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         logvar = self.logvar(latent) #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         out['logvar'] = logvar #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
-        z_randn = torch.randn(mean.shape) #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
+        z_randn = torch.randn(mean.shape).to(frame_source.device) #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         latent = mean + torch.exp(0.5*logvar)*z_randn #(b, min(max_channel, (2**num_layers)*layer_xp), h/scalestep**num_layers, w/scalestep**num_layers)
         motion_flow = motion['motion'] #(b, h, w, 2)
         motion_flow = self.upsampler(motion_flow.permute(0, 3, 1, 2)).permute(0, 2, 3, 1) #(b, h/scalestep**num_layers, w/scalestep**num_layers, 2)
