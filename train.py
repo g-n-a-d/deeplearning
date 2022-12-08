@@ -34,5 +34,5 @@ def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_
         scheduler.step()
         log_loss['epoch_{}'.format(epoch + 1)] = log_loss_
         if log:
-            with open('log/log_loss_{}.yaml'.format(type(model).__name__), 'a') as f:
+            with open('log_loss_{}.yaml'.format(type(model).__name__), 'a') as f:
                 dump(log_loss, f, default_flow_style=False)
