@@ -1,12 +1,12 @@
 import torch
 from yaml import dump
 
-def train(model, data_loader, loss_function, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], gamma=0.1, device=torch.device('cpu'), display=False, log=False):
+def train(model, data_loader, loss_function, checkpoint_epoch=0, num_epochs=10, lr=1e-4, milestones_lr=[7, 9], gamma=0.1, device=torch.device('cpu'), display=False, log=False):
     criterion = loss_function
     optimizer = torch.optim.Adam(params=model.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=milestones_lr, gamma=gamma)
     model.train()
-    for epoch in range(num_epochs):
+    for epoch in range(checkpoint_epoch, num_epochs):
         log_loss = {}
         log_loss_ = {
             'total': [],

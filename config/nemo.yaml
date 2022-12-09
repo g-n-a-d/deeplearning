@@ -12,6 +12,7 @@ MotionModule:
     num_layers: 5
     max_channel: 256
     occlusion: True
+  scale_opticalflow: 1
 GenerationModule:
   layer_xp: 64
   num_layers: 2

@@ -1,10 +1,10 @@
 import torch
 
-def reconstructionloss(model, frames_source, frames_target):
+def reconstructionloss(model, test_loader):
     pass
 
-def akd(model, frames_source, frames_target):
+def akd(model, test_loader):
     pass
 
-def fid(model, frames_source, frames_target):
+def fid(model, test_loader):
     pass

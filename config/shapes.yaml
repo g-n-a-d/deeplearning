@@ -12,6 +12,7 @@ MotionModule:
     num_layers: 5
     max_channel: 128
     occlusion: True
+  scale_opticalflow: 1
 GenerationModule:
   layer_xp: 16
   num_layers: 2
@@ -27,9 +28,9 @@ loss:
   equivariance_constraint_jacobian: True
   weight_loss: [1., 0.83, 0.83]
 train:
-  num_epochs: 30
+  num_epochs: 15
   lr: 1.0e-4
-  milestones_lr: [8, 16, 24]
+  milestones_lr: [4, 8, 12]
   gamma: 0.1
 data_loader:
   batch_size: 32
