@@ -15,7 +15,7 @@ MotionModule:
   scale_opticalflow: 0.5
 GenerationModule:
   layer_xp: 64
-  num_layers: 2
+  num_layers: 1
   num_reslayers: 6
   max_channel: 256
   scalestep: 2
@@ -26,7 +26,7 @@ loss:
   scales: [1, 0.75, 0.5, 0.25]
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
-  weight_loss: [1., 0.83, 0.83]
+  weight_loss: [1., 0.87, 0.87]
 train:
   num_epochs: 30
   lr: 1.0e-4
