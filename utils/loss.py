@@ -123,7 +123,7 @@ class VAELoss(torch.nn.Module):
         self.mse = torch.nn.MSELoss()
 
     def kld(self, mean, logvar):
-        return 0.5*torch.mean(torch.exp(logvar) - logvar + mean**2 - 1)
+        return 0.5*torch.sum(torch.exp(logvar) - logvar + mean**2 - 1)
 
     def forward(self, pred, frame_driving):
         loss = {}
@@ -134,7 +134,8 @@ class VAELoss(torch.nn.Module):
             pred_vgg = self.vgg(frame_pred_)
             target_vgg = self.vgg(frame_target)
             for i in range(4):
-                loss['total'] += self.mse(pred_vgg[i], target_vgg[i]) + self.kld(pred['mean'], pred['logvar'])
+                loss['total'] += self.weight_loss[0]*self.mse(pred_vgg[i], target_vgg[i])
+        loss['total'] += self.weight_loss[0]*self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
             tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)
             loss_ec = tf(frame_driving)
