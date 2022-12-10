@@ -28,10 +28,10 @@ loss:
   equivariance_constraint_jacobian: True
   weight_loss: [1., 0.87, 0.87]
 train:
-  num_epochs: 30
+  num_epochs: 20
   lr: 1.0e-4
-  milestones_lr: [8, 16, 24]
+  milestones_lr: [6, 12, 18]
   gamma: 0.1
 data_loader:
-  batch_size: 32
+  batch_size: 56
   shuffle: True
