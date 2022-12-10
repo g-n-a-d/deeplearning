@@ -33,5 +33,5 @@ train:
   milestones_lr: [8, 16, 24]
   gamma: 0.1
 data_loader:
-  batch_size: 4
+  batch_size: 32
   shuffle: True
