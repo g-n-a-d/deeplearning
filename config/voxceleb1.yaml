@@ -2,8 +2,8 @@ num_channels: 3
 num_kp: 13
 MotionModule:
   KeypointDetector:
-    layer_xp: 64
-    num_layers: 3
+    layer_xp: 32
+    num_layers: 5
     max_channel: 512
     temperature: 0.1
     jacobian: True
@@ -26,12 +26,12 @@ loss:
   scales: [1, 0.75, 0.5, 0.25]
   equivariance_constraint_value: True
   equivariance_constraint_jacobian: True
-  weight_loss: [1., 0.87, 0.87]
+  weight_loss: [1., 0.93, 0.93]
 train:
-  num_epochs: 20
+  num_epochs: 25
   lr: 1.0e-4
-  milestones_lr: [6, 12, 18]
+  milestones_lr: [7, 14, 21]
   gamma: 0.1
 data_loader:
-  batch_size: 56
+  batch_size: 48
   shuffle: True
