@@ -5,7 +5,7 @@ from utils.Modules import meshgrid
 class Vgg19_pretrained(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        vgg_pretrained_features = models.vgg19(weights='IMAGENET1K_V1').requires_grad_(False).features
+        vgg_pretrained_features = models.vgg19(pretrained=True).requires_grad_(False).features
         self.block1 = torch.nn.Sequential()
         self.block2 = torch.nn.Sequential()
         self.block3 = torch.nn.Sequential()
