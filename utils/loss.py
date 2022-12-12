@@ -83,15 +83,17 @@ class Transform(torch.nn.Module):
         return loss
 
 class L1Loss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_std=0.5, shift_std=0.3, scale_opticalflow=1):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_tf=0.35, angle_tf=30, shear_tf=30, shift_tf=0.3, scale_opticalflow=1):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
         self.weight_loss = weight_loss
         self.kpdetector = kpdetector
-        self.scale_std = scale_std
-        self.shift_std = shift_std
+        self.scale_tf = scale_tf
+        self.angle_tf = angle_tf
+        self.shear_tf = shear_tf
+        self.shift_tf = shift_tf
         self.scale_opticalflow = scale_opticalflow
         self.vgg = Vgg19_pretrained()
 
@@ -106,7 +108,7 @@ class L1Loss(torch.nn.Module):
             for i in range(4):
                 loss['total'] += self.weight_loss[0]*torch.abs(pred_vgg[i] - target_vgg[i]).mean()
         if self.ecv or self.ecj:
-            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)
+            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_tf, self.angle_tf, self.shear_tf, self.shift_tf).to(frame_driving.device)
             frame_driving_ = torch.nn.functional.interpolate(frame_driving, scale_factor=self.scale_opticalflow)
             loss_ec = tf(frame_driving_)
             loss['ec'] = 0
@@ -119,15 +121,17 @@ class L1Loss(torch.nn.Module):
         return loss
 
 class VAELoss(torch.nn.Module):
-    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_std=0.5, shift_std=0.3, scale_opticalflow=1):
+    def __init__(self, scales=(1.,), equivariance_constraint_value=False, equivariance_constraint_jacobian=False, weight_loss=[1., 1., 1.], kpdetector=None, scale_tf=0.35, angle_tf=30, shear_tf=30, shift_tf=0.3, scale_opticalflow=1):
         super().__init__()
         self.scales = scales
         self.ecv = equivariance_constraint_value
         self.ecj = equivariance_constraint_jacobian
         self.weight_loss = weight_loss
         self.kpdetector = kpdetector
-        self.scale_std = scale_std
-        self.shift_std = shift_std
+        self.scale_tf = scale_tf
+        self.angle_tf = angle_tf
+        self.shear_tf = shear_tf
+        self.shift_tf = shift_tf
         self.scale_opticalflow = scale_opticalflow
         self.vgg = Vgg19_pretrained()
         self.mse = torch.nn.MSELoss()
@@ -147,7 +151,7 @@ class VAELoss(torch.nn.Module):
                 loss['total'] += self.weight_loss[0]*self.mse(pred_vgg[i], target_vgg[i])
         loss['total'] += len(self.scales)*self.weight_loss[0]*self.kld(pred['mean'], pred['logvar'])
         if self.ecv or self.ecj:
-            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_std, self.shift_std).to(frame_driving.device)
+            tf = Transform(frame_driving.shape[0], self.kpdetector, self.scale_tf, self.angle_tf, self.shear_tf, self.shift_tf).to(frame_driving.device)
             frame_driving_ = torch.nn.functional.interpolate(frame_driving, scale_factor=self.scale_opticalflow)
             loss_ec = tf(frame_driving_)
             loss['ec'] = 0
