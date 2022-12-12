@@ -35,7 +35,7 @@ class Transform(torch.nn.Module):
         super().__init__()
         self.kp_detector = kpdetector
         self.scale = torch.nn.Parameter(scale_std*(torch.rand((b, 1)) - 0.5) + 1, requires_grad=False) #(b, 1)
-        theta = torch.nn.Parameter(6.28318530718*torch.rand((b, 1)), requires_grad=False) #(b, 1)
+        theta = torch.nn.Parameter(0.78539816339*(torch.rand((b, 1)) - 0.5), requires_grad=False) #(b, 1)
         costheta = torch.cos(theta).unsqueeze(-1) #(b, 1, 1)
         sintheta = torch.sin(theta).unsqueeze(-1) #(b, 1, 1)
         rotationmatrix = torch.cat((torch.cat((costheta, sintheta), dim=-1), torch.cat((-sintheta, costheta), dim=-1)), dim=-2) #(b, 2, 2)
