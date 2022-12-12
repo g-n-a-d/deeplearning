@@ -31,20 +31,27 @@ class Vgg19_pretrained(torch.nn.Module):
         return outs
 
 class Transform(torch.nn.Module):
-    def __init__(self, b, kpdetector, scale_std=0.5, shift_std=0.3):
+    def __init__(self, b, kpdetector, scale=0.35, angle=30, shear=30, shift=0.3):
         super().__init__()
         self.kp_detector = kpdetector
-        self.scale = torch.nn.Parameter(scale_std*(torch.rand((b, 1)) - 0.5) + 1, requires_grad=False) #(b, 1)
-        theta = torch.nn.Parameter(0.78539816339*(torch.rand((b, 1)) - 0.5), requires_grad=False) #(b, 1)
+        self.scale = torch.nn.Parameter(scale*(torch.rand((b, 1)) - 0.5) + 1, requires_grad=False) #(b, 1)
+        theta = torch.nn.Parameter((angle/180)*3.14159265359*(torch.rand((b, 1)) - 0.5), requires_grad=False) #(b, 1)
         costheta = torch.cos(theta).unsqueeze(-1) #(b, 1, 1)
         sintheta = torch.sin(theta).unsqueeze(-1) #(b, 1, 1)
         rotationmatrix = torch.cat((torch.cat((costheta, sintheta), dim=-1), torch.cat((-sintheta, costheta), dim=-1)), dim=-2) #(b, 2, 2)
         self.rotation = torch.nn.Parameter(rotationmatrix, requires_grad=False) #(b, 2, 2)
-        self.shift = torch.nn.Parameter(shift_std*torch.rand((b, 2)), requires_grad=False) #(b, 2)
+        h = torch.tan((angle/180)*3.14159265359*(torch.rand((b, 1)) - 0.5)) #(b, 1)
+        v = torch.tan((angle/180)*3.14159265359*(torch.rand((b, 1)) - 0.5)) #(b, 1)
+        one = torch.ones((b, 1)) #(b, 1)
+        shearmatrix = torch.cat((torch.cat((one, v), dim=-1), torch.cat((h, one), dim=-1)), dim=-2) #(b, 2, 2)
+        self.shear = torch.nn.Parameter(shearmatrix, requires_grad=False) #(b, 2, 2)
+        self.shift = torch.nn.Parameter(shift*torch.rand((b, 2)), requires_grad=False) #(b, 2)
 
     def warp_kp(self, kp):
         kp_tf = self.scale.unsqueeze(1)*kp #(b, num_kp, 2)
-        kp_tf = torch.matmul(kp_tf, self.rotation)#(b, num_kp, 2)
+        # kp_tf = torch.matmul(kp_tf, self.shear) #(b, num_kp, 2)
+        kp_tf = torch.matmul(kp_tf, self.rotation) #(b, num_kp, 2)
+        kp_tf = torch.matmul(kp_tf, self.shear) #(b, num_kp, 2)
         kp_tf = kp_tf + self.shift.unsqueeze(1) #(b, num_kp, 2)
         return kp_tf
 
@@ -64,7 +71,7 @@ class Transform(torch.nn.Module):
 
     def forward(self, frame):
         loss = {}
-        kp = self.kp_detector(frame)
+        kp = self.kp_detector(frame) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
         frame_transformed = self.tf_frame(frame) #(b, c, h, w)
         kp_transformed = self.kp_detector(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
         ecv = self.warp_kp(kp_transformed['kp']) #(b, num_kp, 2)
