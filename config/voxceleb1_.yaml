@@ -27,7 +27,7 @@ transform:
 loss:
   scales: [1, 0.75, 0.5, 0.25]
   equivariance_constraint_value: True
-  equivariance_constraint_jacobian: True
+  equivariance_constraint_jacobian: False
   weight_loss: [1., 1., 1.]
 train:
   num_epochs: 25
