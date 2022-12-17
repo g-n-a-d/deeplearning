@@ -1,0 +1,39 @@
+num_channels: 3
+num_kp: 4
+MotionModule:
+  KeypointDetector:
+    layer_xp: 16
+    num_layers: 5
+    max_channel: 128
+    temperature: 0.1
+    jacobian: False
+  DenseMotion:
+    layer_xp: 16
+    num_layers: 5
+    max_channel: 128
+    occlusion: False
+  scale_opticalflow: 1
+GenerationModule:
+  layer_xp: 16
+  num_layers: 2
+  num_reslayers: 6
+  max_channel: 128
+  scalestep: 2
+transform:
+  scale_std: 0.35
+  angle: 30
+  shear: 30
+  shift_std: 0.3
+loss:
+  scales: [1, 0.75, 0.5]
+  equivariance_constraint_value: True
+  equivariance_constraint_jacobian: True
+  weight_loss: [1., 0.83, 0.83]
+train:
+  num_epochs: 15
+  lr: 1.0e-4
+  milestones_lr: [4, 8, 12]
+  gamma: 0.1
+data_loader:
+  batch_size: 32
+  shuffle: True
