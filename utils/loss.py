@@ -75,10 +75,11 @@ class Transform(torch.nn.Module):
         kp_transformed = self.kp_detector(frame_transformed) #kp(b, num_kp, 2), jacobian(b, num_kp, 2, 2)
         ecv = self.warp_kp(kp_transformed['kp']) #(b, num_kp, 2)
         loss['ecv'] = torch.abs(kp['kp'] - ecv).mean() #(1)
-        Xgrad_inv = torch.inverse(kp['jacobian']) #(b, num_kp, 2, 2)
-        ecj = torch.matmul(Xgrad_inv, torch.matmul(self.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])) #(b, num_kp, 2, 2)
-        I = torch.eye(2).to(frame.device) #(2, 2)
-        loss['ecj'] = torch.abs(ecj - I).mean() #(1)
+        if 'jacobian' in kp.keys():
+            Xgrad_inv = torch.inverse(kp['jacobian']) #(b, num_kp, 2, 2)
+            ecj = torch.matmul(Xgrad_inv, torch.matmul(self.jacobian(kp_transformed['kp']), kp_transformed['jacobian'])) #(b, num_kp, 2, 2)
+            I = torch.eye(2).to(frame.device) #(2, 2)
+            loss['ecj'] = torch.abs(ecj - I).mean() #(1)
         return loss
 
 class L1Loss(torch.nn.Module):
