@@ -1,5 +1,5 @@
 num_channels: 3
-num_kp: 13
+num_kp: 10
 MotionModule:
   KeypointDetector:
     layer_xp: 64
@@ -20,7 +20,9 @@ GenerationModule:
   max_channel: 256
   scalestep: 1
 transform:
-  scale_std: 0.5
+  scale_std: 0.35
+  angle: 30
+  shear: 30
   shift_std: 0.3
 loss:
   scales: [1, 0.75, 0.5]
